@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+    <script type="text/javascript">
+      google.charts.load('current', {'packages':['corechart','controls']});
+      google.charts.setOnLoadCallback(drawChart);
+
+      function drawChart() {
+        var queryString = encodeURIComponent('SELECT A, B, C, D LIMIT 1000 OFFSET 0'); //Limit solo voy a agarrar 10 filas columna A, offset empieza a contar fila 10
+        var query = new google.visualization.Query(
+            'https://docs.google.com/spreadsheets/d/1SmymPEx6rulI_VI_Pqy8WEhD3DJrkH4ED6kVTmComgQ/gviz/tq?sheet=REjercicio&headers=1&tq=' + queryString);
+             /*se da clic en el botón superior derecho que es de color verde para compartir*/
+        query.send(handleSampleDataQueryResponse);
+      }
+
+      handleSampleDataQueryResponse();//estamos llamando a la funcion lo cual se le olvida en el ejemplo
+      function handleSampleDataQueryResponse(response) {
+      if (response.isError()) {
+        alert('Error in query: ' + response.getMessage() + ' ' + response.getDetailedMessage());
+        return;
+      }
+
+      var data = response.getDataTable();
+        
+      /*esto que chibgaos es por esto no se me pintaba la tabla*/
+      var dashboard = new google.visualization.Dashboard(
+            document.getElementById('dashboard_div')); //así se va a llamar el tablero
+      /*--------Hasta aquí me extrae los datos de la hoja-------------------------------*/
+
+      var Filtro_Fecha = new google.visualization.ControlWrapper({
+          'controlType': 'DateRangeFilter',
+          'containerId': 'filtroporfecha',
+          'options': {
+            'filterColumnLabel': 'Marca temporal'
+          }
+        });
+
+      var LineChart = new google.visualization.ChartWrapper({
+          'chartType': 'ComboChart', //'LineChart', 
+          'containerId': 'chart_Line',
+          'options': {
+            'width': 800,
+            'height': 450,
+            'title': 'Registro de Ejercicios..',
+            'seriesType': 'line',
+            'legend': true,
+            'pointSize': 18,
+              'series': {
+                0: { pointShape: 'circle' },
+                1: { pointShape: 'triangle' },
+                2: { pointShape: 'square' },
+                /*3: { pointShape: 'diamond' },
+                4: { pointShape: 'star' },
+                5: { pointShape: 'polygon' },
+                6: { pointShape: 'triangle' },
+                7: { pointShape: 'square' },
+                8: { pointShape: 'diamond' },
+                9: { pointShape: 'star' },
+                10: { pointShape: 'polygon' },*/
+              }
+          }
+        });
+
+        
+        dashboard.bind([Filtro_Fecha],[LineChart]); //primero van los filtros, despues van las graficas
+
+        // Draw the dashboard.
+        dashboard.draw(data);
+
+
+        exportarAExcel();
+  
+};// por este no me jalaba 
+
+      function exportarAExcel() {
+        var Componentes = [
+          
+          {type: 'csv', datasource: 'https://spreadsheets.google.com/tq?key=1SmymPEx6rulI_VI_Pqy8WEhD3DJrkH4ED6kVTmComgQ'},
+          {type: 'html', datasource: 'https://spreadsheets.google.com/tq?key=1SmymPEx6rulI_VI_Pqy8WEhD3DJrkH4ED6kVTmComgQ'},
+          
+        ];
+
+        var Contenedor = document.getElementById('toolbar_div');
+        google.visualization.drawToolbar(Contenedor, Componentes);
+      };
+
+    </script>
+  </head>
+  <body>
+    <div id="dashboard_div"></div>
+
+    <div id="filtroporfecha"></div>
+    <div id="toolbar_div"></div>
+    <div id="chart_Line" style="width: 900px; height: 500px;"></div>
+    
+  </body>
+</html>
